@@ -1,19 +1,42 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
 	r := gin.Default()
 
 	api := r.Group("/api/v1")
-	api.GET("/posts", getPosts)
+	api.POST("/hello", func(c *gin.Context) {
+		var req NameRequest
 
-	r.Run(":8080")
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":   "BadRequest",
+				"message": "단어에 문제가 있습니다.",
+			})
+			return
+		}
+
+		hello := HelloResponse{
+			Name:    req.Name,
+			Message: "반갑습니다.",
+		}
+
+		c.JSON(http.StatusCreated, hello)
+	})
+
+	r.Run()
 }
 
-func getPosts(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"title":   "test",
-		"content": "test123",
-	})
+type NameRequest struct {
+	Name string `json:"name"`
+}
+
+type HelloResponse struct {
+	Name    string `json:"name"`
+	Message string `json:"message"`
 }
